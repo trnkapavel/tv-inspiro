@@ -1,0 +1,8 @@
+.DS_Store
+TVInspiro/TVInspiro.xcodeproj/
+TVInspiro/.build/
+TVInspiro/DerivedData/
+TVInspiro/Sources/App/Secrets.swift
+*.xcuserstate
+xcuserdata/
+.claude/

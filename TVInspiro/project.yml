@@ -1,0 +1,34 @@
+name: TVInspiro
+options:
+  bundleIdPrefix: com.trnka.tvinspiro
+  deploymentTarget:
+    tvOS: "17.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+packages:
+  YouTubeKit:
+    url: https://github.com/alexeichhorn/YouTubeKit
+    from: 0.4.9
+targets:
+  TVInspiro:
+    type: application
+    platform: tvOS
+    sources:
+      - path: Sources
+    dependencies:
+      - package: YouTubeKit
+    info:
+      path: Sources/App/Info.plist
+      properties:
+        UILaunchScreen: {}
+        CFBundleDisplayName: TV Inspiro
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.trnka.tvinspiro
+        PRODUCT_NAME: TVInspiro
+        TARGETED_DEVICE_FAMILY: "3"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_PREVIEWS: YES
