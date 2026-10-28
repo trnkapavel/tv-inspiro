@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
+    @EnvironmentObject private var favorites: FavoritesStore
 
     var body: some View {
         NavigationStack {
@@ -25,7 +26,10 @@ struct HomeView: View {
                 }
             }
             .task {
-                await viewModel.load()
+                await viewModel.load(favorites: favorites.shows)
+            }
+            .onChange(of: favorites.shows) { _, newFavorites in
+                Task { await viewModel.load(favorites: newFavorites) }
             }
         }
     }

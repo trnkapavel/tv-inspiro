@@ -6,6 +6,7 @@ struct DetailView: View {
     @State private var trailerKey: String?
     @State private var isTrailerLoading = false
     @State private var showingTrailer = false
+    @State private var trailerErrorMessage: String?
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -53,6 +54,12 @@ struct DetailView: View {
                     }
                     .disabled(isTrailerLoading)
 
+                    if let trailerErrorMessage {
+                        Text(trailerErrorMessage)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+
                     Button {
                         favorites.toggle(show)
                     } label: {
@@ -74,6 +81,7 @@ struct DetailView: View {
 
     private func loadAndPlayTrailer() async {
         isTrailerLoading = true
+        trailerErrorMessage = nil
         defer { isTrailerLoading = false }
         do {
             if trailerKey == nil {
@@ -81,9 +89,11 @@ struct DetailView: View {
             }
             if trailerKey != nil {
                 showingTrailer = true
+            } else {
+                trailerErrorMessage = "Pro tento seriál nemá TMDB žádný trailer."
             }
         } catch {
-            // Trailer se nepodařilo najít, tlačítko zůstane dostupné pro další pokus.
+            trailerErrorMessage = "Nepodařilo se načíst trailer."
         }
     }
 }

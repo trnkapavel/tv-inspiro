@@ -21,19 +21,27 @@ final class HomeViewModel: ObservableObject {
         (80, "Krimi")
     ]
 
-    func load() async {
+    func load(favorites: [TVShow]) async {
         isLoading = true
         errorMessage = nil
         do {
             async let trending = client.trending()
             async let topRated = client.topRated()
             async let popular = client.popular()
+            async let recommended = recommendedShows(basedOn: favorites)
 
-            var newRows: [ShowRow] = [
+            var newRows: [ShowRow] = []
+
+            let recommendedShows = try await recommended
+            if !recommendedShows.isEmpty {
+                newRows.append(ShowRow(id: "recommended", title: "Doporučeno pro tebe", shows: recommendedShows))
+            }
+
+            newRows.append(contentsOf: [
                 ShowRow(id: "trending", title: "Populární tento týden", shows: try await trending),
                 ShowRow(id: "top_rated", title: "Nejlépe hodnocené", shows: try await topRated),
                 ShowRow(id: "popular", title: "Oblíbené u diváků", shows: try await popular)
-            ]
+            ])
 
             for genre in featuredGenres {
                 let shows = try await client.byGenre(genre.id)
@@ -45,5 +53,24 @@ final class HomeViewModel: ObservableObject {
             errorMessage = "Nepodařilo se načíst tipy. Zkontroluj připojení k internetu."
         }
         isLoading = false
+    }
+
+    /// Natáhne doporučení z TMDB pro pár posledních oblíbených a sloučí je do jedné řady bez duplicit.
+    private func recommendedShows(basedOn favorites: [TVShow]) async throws -> [TVShow] {
+        guard !favorites.isEmpty else { return [] }
+        let seedShows = favorites.suffix(3)
+        let favoriteIds = Set(favorites.map(\.id))
+
+        var seen = Set<Int>()
+        var merged: [TVShow] = []
+        for show in seedShows {
+            let recommendations = (try? await client.recommendations(forShow: show.id)) ?? []
+            for recommendation in recommendations where !favoriteIds.contains(recommendation.id) {
+                if seen.insert(recommendation.id).inserted {
+                    merged.append(recommendation)
+                }
+            }
+        }
+        return merged
     }
 }

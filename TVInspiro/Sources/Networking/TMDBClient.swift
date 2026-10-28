@@ -12,11 +12,11 @@ final class TMDBClient {
     private let language = "cs-CZ"
     private let session = URLSession.shared
 
-    private func get<T: Decodable>(_ type: T.Type, path: String, extraParams: [String: String] = [:]) async throws -> T {
+    private func get<T: Decodable>(_ type: T.Type, path: String, extraParams: [String: String] = [:], language overrideLanguage: String? = nil) async throws -> T {
         var components = URLComponents(string: baseURL + path)
         var items = [
             URLQueryItem(name: "api_key", value: Secrets.tmdbAPIKey),
-            URLQueryItem(name: "language", value: language)
+            URLQueryItem(name: "language", value: overrideLanguage ?? language)
         ]
         items += extraParams.map { URLQueryItem(name: $0.key, value: $0.value) }
         components?.queryItems = items
@@ -49,12 +49,19 @@ final class TMDBClient {
         ]).results
     }
 
+    func recommendations(forShow id: Int) async throws -> [TVShow] {
+        try await get(TVShowPage.self, path: "/tv/\(id)/recommendations").results
+    }
+
     func genres() async throws -> [Genre] {
         try await get(GenreList.self, path: "/genre/tv/list").genres
     }
 
     func videos(forShow id: Int) async throws -> [VideoResult] {
-        try await get(VideoResponse.self, path: "/tv/\(id)/videos").results
+        let czechVideos = try await get(VideoResponse.self, path: "/tv/\(id)/videos").results
+        if !czechVideos.isEmpty { return czechVideos }
+        // Trailery na TMDB skoro vždy existují jen v angličtině, čeština bývá prázdná.
+        return try await get(VideoResponse.self, path: "/tv/\(id)/videos", language: "en-US").results
     }
 
     func trailerKey(forShow id: Int) async throws -> String? {
